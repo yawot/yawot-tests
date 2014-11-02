@@ -20,13 +20,16 @@ if(YAWOT_UNIT_TESTS)
 
   enable_testing()
   add_subdirectory(gtest-1.7.0)
-  include_directories("here")
 
+  get_target_property(YAWOT_INCLUDE_DIRECTORIES yawot INCLUDE_DIRECTORIES)
+  include_directories(${YAWOT_INCLUDE_DIRECTORIES})
+
+  # Cycle through all the tests 'included' above
   foreach(TEST ${YAWOT_TESTS})
-	set(CURRENT_TEST test_${TEST})
-	add_executable(${CURRENT_TEST} ${${TEST}_SRCS} ${${TEST}_HDRS})
-	target_link_libraries(${CURRENT_TEST} yawot gtest gtest_main)
-	add_test(${CURRENT_TEST} ${CURRENT_TEST})
+    set(CURRENT_TEST test_${TEST})
+    add_executable(${CURRENT_TEST} ${${TEST}_SRCS} ${${TEST}_HDRS})
+    target_link_libraries(${CURRENT_TEST} yawot gtest gtest_main)
+    add_test(${CURRENT_TEST} ${CURRENT_TEST})
   endforeach()
 
 endif()
