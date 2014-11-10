@@ -28,14 +28,17 @@ if(YAWOT_UNIT_TESTS)
   include_directories(${YAWOT_INCLUDE_DIRECTORIES})
 
   # Cycle through all the tests 'included' above
-  set(test_list)
-  set(valgrind_test_list)
+  set(TEST_LIST)
   foreach(TEST ${YAWOT_TESTS})
     set(CURRENT_TEST test_${TEST})
+    if(CURRENT_CATEGORY)
+      set(CURRENT_CATEGORY "${CURRENT_CATEGORY}_")
+    endif()
     add_executable(${CURRENT_TEST} ${${TEST}_SRCS} ${${TEST}_HDRS})
     target_link_libraries(${CURRENT_TEST} yawot gtest gtest_main)
-    add_test(${CURRENT_TEST} ${CURRENT_TEST})
-    list(APPEND test_list ${CURRENT_TEST})
+    add_test(${CURRENT_CATEGORY}unit_${CURRENT_TEST} ${CURRENT_TEST})
+    list(APPEND TEST_LIST ${CURRENT_TEST})
+    unset(CURRENT_CATEGORY)
   endforeach()
 
   if(YAWOT_ENABLE_COVERAGE)
@@ -45,13 +48,24 @@ if(YAWOT_UNIT_TESTS)
       COMMAND find ${GCOV_ANALYSIS_PATH} -type f -name '*.gcda' -print | xargs /bin/rm -f
       COMMAND ctest > /dev/null
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/gcov
-      COMMENT "Prepare for test coverage")
+      COMMENT "Prepare for coverage tests")
     add_custom_target(coverage
       COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -type f -name *.gcno` -r -s ${GCOV_PREFIX_PATH}
       COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -type f -name *.gcno` -r -s ${GCOV_BUILD_PREFIX_PATH}
-      DEPENDS ${test_list} prepare_coverage
+      DEPENDS ${TEST_LIST} prepare_coverage
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gcov
-      COMMENT "Running test coverage")
+      COMMENT "Running coverage tests")
+  endif()
+
+  if(YAWOT_ENABLE_MEMCHECK)
+    add_custom_target(prepare_memcheck
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/memcheck
+      COMMENT "Prepare for memcheck tests")
+    add_custom_target(memcheck
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/valgrindtest.py ${CMAKE_CURRENT_BINARY_DIR} ${TEST_LIST}
+      DEPENDS ${TEST_LIST} prepare_memcheck
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/memcheck
+      COMMENT "Running memcheck tests")
   endif()
 
 endif()

@@ -20,13 +20,14 @@ def garbage(line):
 
 def memcheck(test):
     ''' run valgrind-memcheck on test in testdir. return xml output as string '''
+    test_name = path.basename(test)
     v = find_valgrind()
-    cmd = v+" --tool=memcheck --child-silent-after-fork=yes --leak-check=full --xml=yes --xml-fd=3 --num-callers=50 " + test + " 3>memcheck.tmp"
+    cmd = v+" --tool=memcheck --child-silent-after-fork=yes --leak-check=full --xml=yes --xml-fd=3 --num-callers=50 " + test + " 1>{0}.txt 2>{0}.err 3>{0}.xml".format(test_name)
     #print cmd
     system(cmd)
-    out = open("memcheck.tmp").readlines()
+    out = open("{0}.xml".format(test_name)).readlines()
     #remove("/tmp/.memcheck.tmp")
-    out = filter(garbage, out)
+    out = list(filter(garbage, out))
     return ''.join(out)
 
 def xml_child_data(dom,tag):
@@ -77,7 +78,7 @@ class BackTrace:
         self.what = xml_child_data(self.dom, 'what')
 
     def is_definitely_lost(self):
-        return self.kind == u'Leak_DefinitelyLost'
+        return self.kind == 'Leak_DefinitelyLost'
 
     def is_qtest(self):
         is_interesting = False
@@ -110,7 +111,7 @@ def parse_errors(out):
 
 #from: http://mail.python.org/pipermail/python-list/2002-August/157829.html
 def which (filename):
-    if not environ.has_key('PATH') or environ['PATH'] == '':
+    if 'PATH' not in environ or environ['PATH'] == '':
         p = defpath
     else:
         p = environ['PATH']
@@ -128,34 +129,37 @@ def find_valgrind():
     if valgrind != None:
         return valgrind
     else:
-        print "valgrind NOT FOUND"
-        exit(-1)
+        print("valgrind NOT FOUND")
+        exit(2)
 
 def run_single_test(exe_name):
     if access(exe_name, X_OK):
         pass
     else:
-        print "executable "+exe_name+" NOT FOUND"
-        exit(-1)
+        print("executable "+exe_name+" NOT FOUND")
+        exit(2)
 
-    print ">> running valgrind memcheck on " + exe_name
+    print(">> running valgrind memcheck on " + exe_name)
     out = memcheck(exe_name)
     errors = parse_errors(out)
     if len(errors) == 0:
-        print "PASS"
+        print("MEMCHECK - PASS")
         exit(0)
     else:
         for trace in errors:
-            print trace,
-            print "---------------------------------------------------"
-        exit(-1)
+            print(trace, end=' ')
+            print("---------------------------------------------------")
+        exit(2)
 
 ################### ENTRY ####################################################
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) > 1: run_single_test(sys.argv[1])
+    if len(sys.argv) > 2:
+        test_dir = sys.argv[1]
+        for single_test in sys.argv[2:]:
+            run_single_test(path.join(test_dir, single_test))
     else:
-        print "usage: ./runMemcheck.py test_executable"
-        exit(-1)
+        print("usage: ./valgringMemcheck.py test_executable")
+        exit(1)
 
