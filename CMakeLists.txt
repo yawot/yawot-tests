@@ -46,14 +46,10 @@ if(YAWOT_UNIT_TESTS)
       COMMAND ctest > /dev/null
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/gcov
       COMMENT "Prepare for test coverage")
-    add_custom_target(coverage_build
-      COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -name *.gcno` -r -s ${GCOV_BUILD_PREFIX_PATH}
-      DEPENDS prepare_coverage
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gcov
-      COMMENT "Running test coverage (for files in build directory)")
     add_custom_target(coverage
-      COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -name *.gcno` -r -s ${GCOV_PREFIX_PATH}
-      DEPENDS ${test_list} prepare_coverage coverage_build
+      COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -type f -name *.gcno` -r -s ${GCOV_PREFIX_PATH}
+      COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -type f -name *.gcno` -r -s ${GCOV_BUILD_PREFIX_PATH}
+      DEPENDS ${test_list} prepare_coverage
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gcov
       COMMENT "Running test coverage")
   endif()
