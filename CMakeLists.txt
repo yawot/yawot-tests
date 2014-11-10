@@ -38,22 +38,25 @@ if(YAWOT_UNIT_TESTS)
     list(APPEND test_list ${CURRENT_TEST})
   endforeach()
 
-  # Prepare for test coverage by generating the gcov note files
-  # and creating an output directory for the data files
-  add_custom_target(prepare_coverage
-    COMMAND ctest > /dev/null
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/gcov
-    COMMENT "Prepare for test coverage")
-  add_custom_target(coverage_build
-    COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -name *.gcno` -r -s ${GCOV_BUILD_PREFIX_PATH}
-    DEPENDS prepare_coverage
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gcov
-    COMMENT "Running test coverage (for files in build directory)")
-  add_custom_target(coverage
-    COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -name *.gcno` -r -s ${GCOV_PREFIX_PATH}
-    DEPENDS ${test_list} prepare_coverage coverage_build
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gcov
-    COMMENT "Running test coverage")
+  if(YAWOT_ENABLE_COVERAGE)
+    # Prepare for test coverage by generating the gcov note files
+    # and creating an output directory for the data files
+    add_custom_target(prepare_coverage
+      COMMAND find ${GCOV_ANALYSIS_PATH} -type f -name '*.gcda' -print | xargs /bin/rm -f
+      COMMAND ctest > /dev/null
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/gcov
+      COMMENT "Prepare for test coverage")
+    add_custom_target(coverage_build
+      COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -name *.gcno` -r -s ${GCOV_BUILD_PREFIX_PATH}
+      DEPENDS prepare_coverage
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gcov
+      COMMENT "Running test coverage (for files in build directory)")
+    add_custom_target(coverage
+      COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -name *.gcno` -r -s ${GCOV_PREFIX_PATH}
+      DEPENDS ${test_list} prepare_coverage coverage_build
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gcov
+      COMMENT "Running test coverage")
+  endif()
 
 endif()
 
