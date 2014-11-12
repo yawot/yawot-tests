@@ -53,8 +53,7 @@ if(YAWOT_UNIT_TESTS)
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/gcov
       COMMENT "Prepare for coverage tests")
     add_custom_target(coverage
-      COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -type f -name *.gcno` -r -s ${GCOV_PREFIX_PATH}
-      COMMAND gcov `find ${GCOV_ANALYSIS_PATH} -type f -name *.gcno` -r -s ${GCOV_BUILD_PREFIX_PATH}
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/gcovcoverage.py ${GCOV_ANALYSIS_PATH} ${GCOV_PREFIX_PATH} ${GCOV_BUILD_PREFIX_PATH}
       DEPENDS ${TEST_LIST} prepare_coverage
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gcov
       COMMENT "Running coverage tests")
@@ -65,7 +64,7 @@ if(YAWOT_UNIT_TESTS)
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/memcheck
       COMMENT "Prepare for memcheck tests")
     add_custom_target(memcheck
-      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/valgrindtest.py ${CMAKE_CURRENT_BINARY_DIR} ${TEST_LIST}
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/valgrindmemcheck.py ${CMAKE_CURRENT_BINARY_DIR} ${TEST_LIST}
       DEPENDS ${TEST_LIST} prepare_memcheck
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/memcheck
       COMMENT "Running memcheck tests")

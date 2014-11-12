@@ -133,33 +133,38 @@ def find_valgrind():
         exit(2)
 
 def run_single_test(exe_name):
-    if access(exe_name, X_OK):
-        pass
-    else:
+    success = False
+    if not access(exe_name, X_OK):
         print("executable "+exe_name+" NOT FOUND")
-        exit(2)
+        return success
 
-    print(">> running valgrind memcheck on " + exe_name)
+    sys.stdout.write(">> running valgrind memcheck on: '{0}'".format(path.basename(exe_name)))
     out = memcheck(exe_name)
     errors = parse_errors(out)
     if len(errors) == 0:
-        print("MEMCHECK - PASS")
-        exit(0)
+        success = True
+        sys.stdout.write(" - PASS\n")
     else:
         for trace in errors:
-            print(trace, end=' ')
-            print("---------------------------------------------------")
-        exit(2)
+            sys.stderr.write(trace, end=' ')
+            sys.stderr.write("---------------------------------------------------")
+
+    return success
 
 ################### ENTRY ####################################################
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 2:
+        exit_code = 0
         test_dir = sys.argv[1]
         for single_test in sys.argv[2:]:
-            run_single_test(path.join(test_dir, single_test))
+            result = run_single_test(path.join(test_dir, single_test))
+            if not result:
+                exit_code = 2
+
+        exit(exit_code)
     else:
-        print("usage: ./valgringMemcheck.py test_executable")
+        print("usage: ./valgrindmemcheck.py test_exectable_dir test_executable_1 [test_exectuable_2 ...]")
         exit(1)
 
