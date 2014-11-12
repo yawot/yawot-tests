@@ -13,6 +13,9 @@ endif()
 if(YAWOT_ENABLE_COVERAGE)
   set(YAWOT_UNIT_TESTS ON CACHE BOOL "Build unit tests." FORCE)
 endif()
+if(YAWOT_ENABLE_MEMCHECK)
+  set(YAWOT_UNIT_TESTS ON CACHE BOOL "Build unit tests." FORCE)
+endif()
 
 if(YAWOT_UNIT_TESTS)
   # Any tests included here must append the test name
